@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "200209219735",
+    "project_id": "dagensord-58b7a",
+    "storage_bucket": "dagensord-58b7a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:200209219735:android:c3ba64acaf480e90d2a9d2",
+        "android_client_info": {
+          "package_name": "com.example.dagensord"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsCEdkRNvatRbyEm4a1uIoONna16VVsII"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
