@@ -8,7 +8,9 @@ class SignUpScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController usernameController =
-      TextEditingController(); // Add username controller
+      TextEditingController();
+
+  SignUpScreen({super.key}); // Add username controller
 
   @override
   Widget build(BuildContext context) {

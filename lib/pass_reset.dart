@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'auth.dart'; // Import the AuthService class
 
 class PasswordResetScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
+
+  PasswordResetScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

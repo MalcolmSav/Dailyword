@@ -1,10 +1,12 @@
-// ignore_for_file: library_private_types_in_public_api, avoid_print
+// ignore_for_file: library_private_types_in_public_api, avoid_print, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'group_creation_screen.dart'; // Import the Main class
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Add Firebase Auth
+import 'group_screen.dart'; // Import the GroupScreen class
 
-Future<void> joinGroup(String groupCode) async {
+Future<void> joinGroup(BuildContext context, String groupCode) async {
   try {
     // Get a reference to the Firestore collection containing groups
     CollectionReference groupsCollection =
@@ -30,7 +32,17 @@ Future<void> joinGroup(String groupCode) async {
       // Print the group name
       print('Group Name: $groupName');
 
-      // Perform any other actions needed after joining the group
+      // Add current user to the group's members list
+      await groupsCollection.doc(groupSnapshot.id).update({
+        'members':
+            FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid])
+      });
+
+      // Navigate to the group screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => GroupScreen(groupSnapshot.id)),
+      );
     } else {
       // Handle the case where the group with the provided code does not exist
       print('Group with code $groupCode does not exist');
@@ -79,7 +91,7 @@ class _GroupJoinScreenState extends State<GroupJoinScreen> {
                 }
 
                 // Call the joinGroup() function to join the group
-                joinGroup(groupCode);
+                joinGroup(context, groupCode); // Pass context to joinGroup
               },
               child: const Text('Join Group'),
             ),
@@ -87,7 +99,7 @@ class _GroupJoinScreenState extends State<GroupJoinScreen> {
         ),
       ),
       bottomNavigationBar: BottomAppBar(
-        child: Container(
+        child: SizedBox(
           height: 50,
           child: Center(
             child: TextButton(
@@ -95,7 +107,7 @@ class _GroupJoinScreenState extends State<GroupJoinScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => GroupCreationScreen()),
+                      builder: (context) => const GroupCreationScreen()),
                 );
               },
               child: const Text(
@@ -114,7 +126,7 @@ class _GroupJoinScreenState extends State<GroupJoinScreen> {
 }
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     home: GroupJoinScreen(),
   ));
 }

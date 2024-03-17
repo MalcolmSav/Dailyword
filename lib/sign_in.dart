@@ -9,6 +9,8 @@ class SignInScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  SignInScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,7 +50,7 @@ class SignInScreen extends StatelessWidget {
                 if (user != null) {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => GroupJoinScreen()),
+                    MaterialPageRoute(builder: (context) => const GroupJoinScreen()),
                   );
                 } else {
                   // Sign-in failed, display an error message to the user
