@@ -7,10 +7,9 @@ import 'sign_in.dart'; // Import the password_reset_screen.dart file
 class SignUpScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController usernameController =
-      TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
 
-  SignUpScreen({super.key}); // Add username controller
+  SignUpScreen({Key? key}); // Add username controller
 
   @override
   Widget build(BuildContext context) {
@@ -52,14 +51,13 @@ class SignUpScreen extends StatelessWidget {
 
                 // Call the registerWithEmailAndPassword method from AuthService
                 final AuthService authService = AuthService();
-                final User? user = await authService
-                    .registerWithEmailAndPassword(email, password);
+                final User? user =
+                    await authService.registerWithEmailAndPassword(
+                        email, password, username); // Pass username
 
                 // Check if user registration was successful
                 if (user != null) {
-                  // Add username to user profile
-                  await authService.updateUsername(username);
-
+                  // Navigate to sign in screen after successful registration
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => SignInScreen()),

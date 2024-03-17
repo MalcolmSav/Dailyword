@@ -1,12 +1,11 @@
-// ignore_for_file: use_build_context_synchronously
-
+import 'package:dagensord/group_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
 
 class GroupCreationScreen extends StatefulWidget {
-  const GroupCreationScreen({super.key});
+  const GroupCreationScreen({Key? key}) : super(key: key);
 
   @override
   _GroupCreationScreenState createState() => _GroupCreationScreenState();
@@ -14,6 +13,7 @@ class GroupCreationScreen extends StatefulWidget {
 
 class _GroupCreationScreenState extends State<GroupCreationScreen> {
   final TextEditingController _groupNameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
 
   String _generateGroupCode() {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -27,6 +27,26 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
     }
 
     return code;
+  }
+
+  Future<void> joinGroup(String groupId, String userId, String username) async {
+    try {
+      CollectionReference groupsCollection =
+          FirebaseFirestore.instance.collection('groups');
+
+      DocumentSnapshot groupSnapshot =
+          await groupsCollection.doc(groupId).get();
+
+      if (groupSnapshot.exists) {
+        await groupsCollection.doc(groupId).update({
+          'members': FieldValue.arrayUnion([userId]),
+        });
+      } else {
+        print('Group with ID $groupId does not exist');
+      }
+    } catch (e) {
+      print('Error joining group: $e');
+    }
   }
 
   @override
@@ -47,49 +67,54 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
             ),
             const SizedBox(height: 16.0),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Group Code'),
-              readOnly: true,
-              initialValue: _generateGroupCode(),
+              controller: _usernameController,
+              decoration: const InputDecoration(labelText: 'Your Username'),
             ),
             const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () async {
                 String groupName = _groupNameController.text.trim();
                 String groupCode = _generateGroupCode();
+                String username = _usernameController.text.trim();
 
-                // Perform validation if needed
-                if (groupName.isEmpty) {
+                if (groupName.isEmpty || username.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Missing group name!'),
+                      content: Text('Missing group name or username!'),
                     ),
                   );
                   return;
                 }
 
                 try {
-                  // Save group data to Firestore
+                  String userId = FirebaseAuth.instance.currentUser!.uid;
                   DocumentReference newGroupRef = await FirebaseFirestore
                       .instance
                       .collection('groups')
                       .add({
                     'groupName': groupName,
                     'groupCode': groupCode,
-                    'members': [
-                      FirebaseAuth.instance.currentUser!.uid
-                    ], // Add initial member
-                    // Add more properties as needed
+                    'creatorUsername': username,
+                    'creatorUID': userId,
+                    'members': [userId],
                   });
 
-                  // Navigate back after group creation
+                  await joinGroup(newGroupRef.id, userId, username);
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Group created!'),
+                      content: Text('Group created and joined!'),
                     ),
                   );
-                  Navigator.pop(context);
+
+                  // Navigate to the group screen
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GroupScreen(newGroupRef.id),
+                    ),
+                  );
                 } catch (e) {
-                  // Handle errors, e.g., display an error message
                   print('Error creating group: $e');
                 }
               },

@@ -23,6 +23,7 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/': (context) => SignInScreen(), // Route to the sign-in screen
+        '/login': (context) => SignInScreen(), // Route to the sign-in screen
         // Add more routes for other screens if needed
       },
       // home: const MyHomePage(title: 'I love my bby'),

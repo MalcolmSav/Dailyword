@@ -48,9 +48,11 @@ class SignInScreen extends StatelessWidget {
 
                 // Check if sign-in was successful
                 if (user != null) {
-                  Navigator.push(
+                  // Navigate to the group join screen only if user is authenticated
+                  Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const GroupJoinScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const GroupJoinScreen()),
                   );
                 } else {
                   // Sign-in failed, display an error message to the user

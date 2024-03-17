@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart'; // Import the firebase_auth package
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -19,15 +19,19 @@ class AuthService {
     }
   }
 
-  // Register with email and password
+  // Register with email, password, and username
   Future<User?> registerWithEmailAndPassword(
-      String email, String password) async {
+      String email, String password, String username) async {
     try {
       final UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Update user's display name with the provided username
+      await userCredential.user!.updateDisplayName(username);
+
       return userCredential.user;
     } catch (e) {
       print('Error registering user: $e');
@@ -49,7 +53,7 @@ class AuthService {
     await _auth.signOut();
   }
 
-  // Update username
+  // Update username (not needed for registration, but keeping for other use cases)
   Future<void> updateUsername(String username) async {
     try {
       User? user = _auth.currentUser;
