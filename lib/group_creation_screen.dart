@@ -40,6 +40,8 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
       if (groupSnapshot.exists) {
         await groupsCollection.doc(groupId).update({
           'members': FieldValue.arrayUnion([userId]),
+          'current_word_submitter':
+              userId, // Set current_word_submitter to the first member
         });
       } else {
         print('Group with ID $groupId does not exist');

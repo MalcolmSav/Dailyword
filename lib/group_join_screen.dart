@@ -20,6 +20,9 @@ class _GroupJoinScreenState extends State<GroupJoinScreen> {
   Future<void> joinGroup(
       BuildContext context, String groupCode, String username) async {
     try {
+      // Get the current user's UID
+      final String userId = FirebaseAuth.instance.currentUser!.uid;
+
       // Get a reference to the Firestore collection containing groups
       CollectionReference groupsCollection =
           FirebaseFirestore.instance.collection('groups');
@@ -33,10 +36,9 @@ class _GroupJoinScreenState extends State<GroupJoinScreen> {
         // Get the group document
         DocumentSnapshot groupSnapshot = querySnapshot.docs.first;
 
-        // Add current user to the group's members list with the chosen username
+        // Add current user's UID to the group's members list
         await groupsCollection.doc(groupSnapshot.id).update({
-          'members': FieldValue.arrayUnion(
-              [username]) // Include username as a single string
+          'members': FieldValue.arrayUnion([userId])
         });
 
         // Navigate to the group screen if the user is not already a member of the group
