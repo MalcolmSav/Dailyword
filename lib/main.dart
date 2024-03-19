@@ -4,6 +4,7 @@ import 'firebase_options.dart';
 import 'sign_in.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter bindings are initialized
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
