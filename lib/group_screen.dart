@@ -94,7 +94,7 @@ class _GroupScreenState extends State<GroupScreen> {
           .get();
 
       final List<dynamic> members = List.from(groupSnapshot['members']);
-      final String newSubmitter = members.length > 0 ? members[0] : '';
+      final String newSubmitter = members.isNotEmpty ? members[0] : '';
 
       await groupRef.update({
         'members': FieldValue.arrayUnion([_currentWordSubmitter]),
