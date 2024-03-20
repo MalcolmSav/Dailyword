@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:dagensord/group_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -15,12 +17,12 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
   final TextEditingController _groupNameController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
 
+  // Function to generate a random four-letter code
   String _generateGroupCode() {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     Random random = Random();
     String code = '';
 
-    // Generate a random four-letter code
     for (int i = 0; i < 4; i++) {
       int index = random.nextInt(letters.length);
       code += letters[index];
@@ -29,23 +31,72 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
     return code;
   }
 
-  Future<void> joinGroup(String groupId, String userId, String username) async {
+  Future<void> _createGroup(String groupName, String groupCode, String username,
+      String userId) async {
     try {
+      // Get a reference to the Firestore collection containing groups
       CollectionReference groupsCollection =
           FirebaseFirestore.instance.collection('groups');
 
-      DocumentSnapshot groupSnapshot =
-          await groupsCollection.doc(groupId).get();
+      // Create a new group document with initial data
+      DocumentReference newGroupRef = await groupsCollection.add({
+        'groupName': groupName,
+        'groupCode': groupCode,
+        'creatorUsername': username,
+        'creatorUID': userId,
+        'members': [userId],
+      });
 
-      if (groupSnapshot.exists) {
-        await groupsCollection.doc(groupId).update({
-          'members': FieldValue.arrayUnion([userId]),
-          'current_word_submitter':
-              userId, // Set current_word_submitter to the first member
-        });
-      } else {
-        print('Group with ID $groupId does not exist');
-      }
+      // Create the 'word_hints' subcollection within the group document
+      await newGroupRef.collection('word_hints').doc('hint').set({
+        'dummy_field': 'dummy_value' // You can add any initial data if needed
+      });
+
+      // Create the 'leaderboard' subcollection within the group document
+      // Here, we're assuming that each user starts with 0 points
+      await newGroupRef.collection('leaderboard').doc(userId).set({
+        'points': 0,
+      });
+
+      // Join the group
+      await _joinGroup(newGroupRef.id, userId, username);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Group created and joined!'),
+        ),
+      );
+
+      // Navigate to the group screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => GroupScreen(newGroupRef.id),
+        ),
+      );
+    } catch (e) {
+      print('Error creating group: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to create group. Please try again.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _joinGroup(
+      String groupId, String userId, String username) async {
+    try {
+      // Get a reference to the Firestore collection containing groups
+      CollectionReference groupsCollection =
+          FirebaseFirestore.instance.collection('groups');
+
+      // Update the group document to add the user as a member
+      await groupsCollection.doc(groupId).update({
+        'members': FieldValue.arrayUnion([userId]),
+        'current_word_submitter':
+            userId, // Set current_word_submitter to the first member
+      });
     } catch (e) {
       print('Error joining group: $e');
     }
@@ -88,37 +139,9 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
                   return;
                 }
 
-                try {
-                  String userId = FirebaseAuth.instance.currentUser!.uid;
-                  DocumentReference newGroupRef = await FirebaseFirestore
-                      .instance
-                      .collection('groups')
-                      .add({
-                    'groupName': groupName,
-                    'groupCode': groupCode,
-                    'creatorUsername': username,
-                    'creatorUID': userId,
-                    'members': [userId],
-                  });
+                String userId = FirebaseAuth.instance.currentUser!.uid;
 
-                  await joinGroup(newGroupRef.id, userId, username);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Group created and joined!'),
-                    ),
-                  );
-
-                  // Navigate to the group screen
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GroupScreen(newGroupRef.id),
-                    ),
-                  );
-                } catch (e) {
-                  print('Error creating group: $e');
-                }
+                await _createGroup(groupName, groupCode, username, userId);
               },
               child: const Text('Create Group'),
             ),

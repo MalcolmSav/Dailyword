@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'group_creation_screen.dart'; // Import the Main class
 import 'package:cloud_firestore/cloud_firestore.dart';

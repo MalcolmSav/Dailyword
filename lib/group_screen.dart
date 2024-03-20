@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'group_service.dart'; // Import your group_service.dart file
 import 'word_submission.dart'; // Import the WordHintSubmissionScreen
 import 'group_join_screen.dart'; // Import the GroupJoinScreen
+import 'leaderboard.dart'; // Import the LeaderboardScreen
+import 'word_add.dart';
 
 class GroupScreen extends StatefulWidget {
   final String groupId;
@@ -64,6 +66,9 @@ class _GroupScreenState extends State<GroupScreen> {
       // Update the current word submitter for the next day
       await _updateWordSubmitter();
 
+      // Update the points for each member
+      await _updatePoints();
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Word and hint submitted successfully.'),
@@ -76,6 +81,40 @@ class _GroupScreenState extends State<GroupScreen> {
           content: Text('Failed to submit word and hint. Please try again.'),
         ),
       );
+    }
+  }
+
+  Future<void> _updatePoints() async {
+    try {
+      // Get a reference to the leaderboard collection
+      CollectionReference leaderboardRef = FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .collection('leaderboard');
+
+      // Get the members of the group
+      DocumentSnapshot groupSnapshot = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .get();
+      List<dynamic> members = List.from(groupSnapshot['members']);
+
+      // Iterate over each member and update their points
+      for (String member in members) {
+        // Get the total number of word hints submitted by the member
+        QuerySnapshot hintSnapshots = await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(widget.groupId)
+            .collection('word_hints')
+            .where('submitter', isEqualTo: member)
+            .get();
+        int points = hintSnapshots.docs.length;
+
+        // Update the points in the leaderboard
+        await leaderboardRef.doc(member).set({'points': points});
+      }
+    } catch (e) {
+      print('Error updating points: $e');
     }
   }
 
@@ -164,57 +203,12 @@ class _GroupScreenState extends State<GroupScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Creator Username: $creatorUsername',
-                  style: const TextStyle(
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
                   'Members: ${members.length}',
                   style: const TextStyle(
                     fontSize: 18,
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Leaderboard:',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: members.length,
-                    itemBuilder: (context, index) {
-                      String username = members[index];
-                      return ListTile(
-                        title: Text(
-                          username,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        trailing: FutureBuilder<int>(
-                          future: GroupService.getPointsForMember(username),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            }
-                            if (snapshot.hasError) {
-                              return Text('Error: ${snapshot.error}');
-                            }
-                            return Text(
-                              'Points: ${snapshot.data ?? 0}',
-                              style: const TextStyle(fontSize: 16),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
                 if (wordSubmitter == FirebaseAuth.instance.currentUser!.uid &&
                     members.isNotEmpty &&
                     members[0] == FirebaseAuth.instance.currentUser!.uid)
@@ -224,7 +218,7 @@ class _GroupScreenState extends State<GroupScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              WordHintSubmissionScreen(widget.groupId),
+                              WordHintAddScreen(widget.groupId),
                         ),
                       );
                     },
@@ -233,10 +227,26 @@ class _GroupScreenState extends State<GroupScreen> {
                 else
                   ElevatedButton(
                     onPressed: () {
-                      // Implement logic for guessing the word
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => WordGuessScreen(widget.groupId),
+                        ),
+                      );
                     },
                     child: const Text('Guess Word'),
                   ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LeaderboardScreen(widget.groupId),
+                      ),
+                    );
+                  },
+                  child: const Text('View Leaderboard'),
+                ),
                 ElevatedButton(
                   onPressed: () async {
                     // Call a function to leave the group
@@ -250,6 +260,26 @@ class _GroupScreenState extends State<GroupScreen> {
         },
       ),
     );
+  }
+
+  Future<void> _refreshGroupData() async {
+    try {
+      // Call the method to get the current word submitter
+      await _getCurrentWordSubmitter();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Group data refreshed.'),
+        ),
+      );
+    } catch (e) {
+      print('Error refreshing group data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to refresh group data. Please try again.'),
+        ),
+      );
+    }
   }
 
   Future<void> _leaveGroup(BuildContext context) async {
