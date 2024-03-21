@@ -58,6 +58,9 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
         'points': 0,
       });
 
+      // Create the 'guesses' subcollection within the group document
+      await newGroupRef.collection('guesses');
+
       // Join the group
       await _joinGroup(newGroupRef.id, userId, username);
 

@@ -17,17 +17,46 @@ class _WordHintAddScreenState extends State<WordHintAddScreen> {
 
   Future<void> _addWordAndHint(String word, String hint) async {
     try {
+      // Get the current user's UID
+      final String userId = FirebaseAuth.instance.currentUser!.uid;
+
+      // Get the current date
+      DateTime now = DateTime.now();
+      DateTime today = DateTime(now.year, now.month, now.day);
+
+      // Query Firestore to check if the user has already submitted a word for the current day
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .collection('word_hints')
+          .where('submitter', isEqualTo: userId)
+          .where('submission_date', isEqualTo: today)
+          .get();
+
+      // Check if the user has already submitted a word for the current day
+      if (querySnapshot.docs.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You have already submitted a word for today.'),
+          ),
+        );
+        return;
+      }
+
+      // Add the word and hint to Firestore
       await FirebaseFirestore.instance
           .collection('groups')
           .doc(widget.groupId)
           .collection('word_hints')
-          .doc('hint') // Assuming the document ID is 'hint'
+          .doc('hint')
           .set({
         'word': word,
         'hint': hint,
-        'submitter': FirebaseAuth.instance.currentUser!.uid,
+        'submitter': userId,
+        'submission_date': today,
       });
 
+      // Show a success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Word and hint submitted successfully!'),
@@ -35,6 +64,7 @@ class _WordHintAddScreenState extends State<WordHintAddScreen> {
       );
     } catch (e) {
       print('Error adding word and hint: $e');
+      // Show an error message if the submission fails
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to submit word and hint. Please try again.'),
