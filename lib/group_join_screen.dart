@@ -43,6 +43,16 @@ class _GroupJoinScreenState extends State<GroupJoinScreen> {
           'members': FieldValue.arrayUnion([userId])
         });
 
+        // Add the new member's username to the leaderboard
+        await groupsCollection
+            .doc(groupSnapshot.id)
+            .collection('leaderboard')
+            .doc(userId)
+            .set({
+          'username': username,
+          'points': 0,
+        });
+
         // Navigate to the group screen if the user is not already a member of the group
         Navigator.pushReplacement(
           context,

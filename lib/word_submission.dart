@@ -82,35 +82,35 @@ class _WordGuessScreenState extends State<WordGuessScreen> {
       final DocumentSnapshot leaderboardSnapshot =
           await leaderboardDocRef.get();
 
-      if (!leaderboardSnapshot.exists) {
-        // Create the leaderboard document with the user's UID as the document ID
+      // Update the last_correct_guess_date if the guess is correct
+      if (isCorrectGuess) {
         await leaderboardDocRef.set({
-          'points': 0,
-          'last_correct_guess_date': null, // Initialize last_correct_guess_date
-        });
+          'points': FieldValue.increment(1),
+          'last_correct_guess_date': Timestamp.fromDate(today),
+        }, SetOptions(merge: true));
       }
 
-      // Check if the guess is correct and has not been guessed before on the same day
-      if (isCorrectGuess) {
-        Timestamp? lastCorrectGuessDate =
-            leaderboardSnapshot['last_correct_guess_date'];
+      // If the guess is correct and it's the first correct guess of the day
+      if (isCorrectGuess && leaderboardSnapshot.exists) {
+        final Map<String, dynamic>? leaderboardData =
+            leaderboardSnapshot.data() as Map<String, dynamic>?;
 
-        if (lastCorrectGuessDate == null ||
-            lastCorrectGuessDate.toDate().isBefore(today)) {
-          // Increment the points for the user if the guess is correct and it's the first correct guess of the day
-          await leaderboardDocRef.update({
-            'points': FieldValue.increment(1),
-            'last_correct_guess_date': Timestamp.fromDate(today),
-          });
-        } else {
-          // Show a message if the user has already guessed correctly today
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content:
-                  Text('You have already submitted a correct guess today.'),
-            ),
-          );
-          return;
+        if (leaderboardData != null &&
+            leaderboardData.containsKey('last_correct_guess_date')) {
+          Timestamp? lastCorrectGuessDate =
+              leaderboardData['last_correct_guess_date'];
+
+          if (lastCorrectGuessDate != null &&
+              lastCorrectGuessDate.toDate().isAfter(today)) {
+            // Show a message if the user has already guessed correctly today
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content:
+                    Text('You have already submitted a correct guess today.'),
+              ),
+            );
+            return;
+          }
         }
       }
 
@@ -183,4 +183,12 @@ class _WordGuessScreenState extends State<WordGuessScreen> {
       ),
     );
   }
+}
+
+void main() {
+  runApp(const MaterialApp(
+    home: Scaffold(
+      body: WordGuessScreen('groupId'),
+    ),
+  ));
 }

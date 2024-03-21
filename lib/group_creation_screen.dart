@@ -53,8 +53,9 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
       });
 
       // Create the 'leaderboard' subcollection within the group document
-      // Here, we're assuming that each user starts with 0 points
+      // Store the user's username and UID in the leaderboard document
       await newGroupRef.collection('leaderboard').doc(userId).set({
+        'username': username,
         'points': 0,
       });
 
@@ -85,6 +86,14 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
         ),
       );
     }
+  }
+
+  // Function to generate a unique ID for the leaderboard document
+  String _generateLeaderboardId(String username) {
+    // You can use any hash function to generate the ID
+    // Here, I'm using a simple hash of the username
+    // You might want to use a more robust hash function for production
+    return username.hashCode.toString();
   }
 
   Future<void> _joinGroup(
