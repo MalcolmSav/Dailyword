@@ -48,7 +48,7 @@ class _WordGuessScreenState extends State<WordGuessScreen> {
       DateTime now = DateTime.now();
       DateTime today = DateTime(now.year, now.month, now.day);
 
-      // Query Firestore to check if the user has already submitted a guess for the current day
+      // Query Firestore to check if the user has already submitted 5 guesses for the current day
       QuerySnapshot guessQuerySnapshot = await FirebaseFirestore.instance
           .collection('groups')
           .doc(widget.groupId)
@@ -57,7 +57,7 @@ class _WordGuessScreenState extends State<WordGuessScreen> {
           .where('submission_date', isEqualTo: today)
           .get();
 
-      // Check if the user has already submitted a guess for the current day
+      // Check if the user has already submitted 5 guesses for the current day
       if (guessQuerySnapshot.docs.length >= 5) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -82,15 +82,7 @@ class _WordGuessScreenState extends State<WordGuessScreen> {
       final DocumentSnapshot leaderboardSnapshot =
           await leaderboardDocRef.get();
 
-      // Update the last_correct_guess_date if the guess is correct
-      if (isCorrectGuess) {
-        await leaderboardDocRef.set({
-          'points': FieldValue.increment(1),
-          'last_correct_guess_date': Timestamp.fromDate(today),
-        }, SetOptions(merge: true));
-      }
-
-      // If the guess is correct and it's the first correct guess of the day
+      // If the guess is correct and it's the first correct guess of the day, update the last_correct_guess_date
       if (isCorrectGuess && leaderboardSnapshot.exists) {
         final Map<String, dynamic>? leaderboardData =
             leaderboardSnapshot.data() as Map<String, dynamic>?;
@@ -112,6 +104,14 @@ class _WordGuessScreenState extends State<WordGuessScreen> {
             return;
           }
         }
+      }
+
+      // Update the leaderboard and guess count if the guess is correct
+      if (isCorrectGuess) {
+        await leaderboardDocRef.set({
+          'points': FieldValue.increment(1),
+          'last_correct_guess_date': Timestamp.fromDate(today),
+        }, SetOptions(merge: true));
       }
 
       // Add the guess to Firestore
