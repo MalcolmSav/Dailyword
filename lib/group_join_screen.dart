@@ -43,6 +43,25 @@ class _GroupJoinScreenState extends State<GroupJoinScreen> {
           'members': FieldValue.arrayUnion([userId])
         });
 
+        // Check if the user already exists in the leaderboard
+        DocumentSnapshot leaderboardSnapshot = await groupsCollection
+            .doc(groupSnapshot.id)
+            .collection('leaderboard')
+            .doc(userId)
+            .get();
+
+        if (!leaderboardSnapshot.exists) {
+          // If the user does not exist in the leaderboard, add them
+          await groupsCollection
+              .doc(groupSnapshot.id)
+              .collection('leaderboard')
+              .doc(userId)
+              .set({
+            'username': username,
+            'points': 0,
+          });
+        }
+
         // Navigate to the group screen if the user is not already a member of the group
         Navigator.pushReplacement(
           context,

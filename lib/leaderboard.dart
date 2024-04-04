@@ -38,13 +38,13 @@ class LeaderboardScreen extends StatelessWidget {
             itemCount: members.length,
             itemBuilder: (context, index) {
               String username = members[index];
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
+              return StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
                     .collection('groups')
                     .doc(groupId)
                     .collection('leaderboard')
                     .doc(username)
-                    .get(),
+                    .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const CircularProgressIndicator();
@@ -53,6 +53,7 @@ class LeaderboardScreen extends StatelessWidget {
                     return const Text('Error: Member data not found');
                   }
                   int points = snapshot.data!['points'] ?? 0;
+                  String username = snapshot.data!['username'] ?? 'Unknown';
                   return ListTile(
                     title: Text(
                       username,
