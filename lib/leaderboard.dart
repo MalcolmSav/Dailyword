@@ -37,13 +37,13 @@ class LeaderboardScreen extends StatelessWidget {
           return ListView.builder(
             itemCount: members.length,
             itemBuilder: (context, index) {
-              String userId = members[index];
+              String username = members[index];
               return StreamBuilder<DocumentSnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('groups')
                     .doc(groupId)
                     .collection('leaderboard')
-                    .doc(userId) // Use UID as document ID
+                    .doc(username)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -55,23 +55,18 @@ class LeaderboardScreen extends StatelessWidget {
                   if (!snapshot.hasData || !snapshot.data!.exists) {
                     return const Text('Error: Member data not found');
                   }
-                  final data = snapshot.data!.data() as Map<String, dynamic>;
-                  final points = data['points'] as int?;
-                  final username = data['username'] as String?;
-                  if (points != null && username != null) {
-                    return ListTile(
-                      title: Text(
-                        username,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      trailing: Text(
-                        'Points: $points',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    );
-                  } else {
-                    return const Text('Data not available');
-                  }
+                  int points = snapshot.data!['points'] ?? 0;
+                  String username = snapshot.data!['username'] ?? 'Unknown';
+                  return ListTile(
+                    title: Text(
+                      username,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    trailing: Text(
+                      'Points: $points',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  );
                 },
               );
             },

@@ -57,6 +57,7 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
       await newGroupRef.collection('leaderboard').doc(userId).set({
         'username': username,
         'points': 0,
+        'username': username,
       });
 
       // Create the 'guesses' subcollection within the group document
