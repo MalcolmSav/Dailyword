@@ -55,7 +55,6 @@ class _GroupCreationScreenState extends State<GroupCreationScreen> {
       // Create the 'leaderboard' subcollection within the group document
       // Store the user's username and UID in the leaderboard document
       await newGroupRef.collection('leaderboard').doc(userId).set({
-        'username': username,
         'points': 0,
         'username': username,
       });

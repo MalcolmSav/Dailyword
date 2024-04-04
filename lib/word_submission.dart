@@ -85,23 +85,26 @@ class _WordGuessScreenState extends State<WordGuessScreen> {
       // Update the last_correct_guess_date if the guess is correct
       if (isCorrectGuess) {
         await leaderboardDocRef.set({
-          'points': FieldValue.increment(1),
+          // 'points': FieldValue.increment(1),
           'last_correct_guess_date': Timestamp.fromDate(today),
         }, SetOptions(merge: true));
       }
 
       // If the guess is correct and it's the first correct guess of the day
       if (isCorrectGuess && leaderboardSnapshot.exists) {
+        print("1");
         final Map<String, dynamic>? leaderboardData =
             leaderboardSnapshot.data() as Map<String, dynamic>?;
 
         if (leaderboardData != null &&
             leaderboardData.containsKey('last_correct_guess_date')) {
+          print("21");
           Timestamp? lastCorrectGuessDate =
               leaderboardData['last_correct_guess_date'];
 
           if (lastCorrectGuessDate != null &&
-              lastCorrectGuessDate.toDate().isAfter(today)) {
+              lastCorrectGuessDate.toDate().isAtSameMomentAs(today)) {
+            print("13");
             // Show a message if the user has already guessed correctly today
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -111,6 +114,12 @@ class _WordGuessScreenState extends State<WordGuessScreen> {
             );
             return;
           }
+        } else {
+          print("41");
+          await leaderboardDocRef.set({
+            'points': FieldValue.increment(1),
+            // 'last_correct_guess_date': Timestamp.fromDate(today),
+          }, SetOptions(merge: true));
         }
       }
 
